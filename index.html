@@ -65,12 +65,26 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label.chip:focus
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px}
 
 /* selector de bitácoras */
-.picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){ .picker{grid-template-columns:1fr} }
 .pgroup{display:flex;flex-direction:column;gap:8px}
 .pbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:700 15px var(--body);cursor:pointer;min-height:52px}
 .pbtn .pdesc{display:block;font-weight:400;font-size:12px;color:var(--muted)}
 .pbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .pbtn .ok{font-size:12px;color:var(--good);white-space:nowrap}
+.today{display:flex;flex-direction:column;gap:10px}
+.today-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.today-head b{font:600 22px var(--display);font-variant-numeric:tabular-nums}
+.progress{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--good);width:0}
+@media (prefers-reduced-motion:no-preference){ .progress i{transition:width .3s} }
+.pbtn{justify-content:flex-start}
+.chk{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:15px;color:transparent}
+.pbtn.done .chk{background:var(--good);border-color:var(--good);color:var(--surface)}
+.pbtn.done .pname{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.pbtn .ok{margin-left:auto}
+.qcount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.num.done{color:var(--good);font-weight:700}
 
 .formhead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
 .field{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -321,7 +335,7 @@ const manualTotal={v:false};
 /* ---------- construir formularios ---------- */
 function fieldHTML(b,f,i){
   const id=`${b.id}-${f.k}`;
-  const n=`<span class="num">${i+1}.</span> `;
+  const n=`<span class="num" id="${id}-n" data-i="${i+1}">${i+1}.</span> `;
   const hint=f.h?` <span class="hint">${esc(f.h)}</span>`:"";
   switch(f.t){
     case "text":  return `<div class="field"><label for="${id}">${n}${esc(f.l)}${hint}</label><textarea id="${id}"></textarea></div>`;
@@ -341,11 +355,14 @@ function fieldHTML(b,f,i){
 function buildForms(){
   const grupos={mañana:[],noche:[]};
   BITACORAS.forEach(b=>grupos[b.momento].push(b));
-  $("picker").innerHTML=Object.entries(grupos).map(([m,bs])=>`<div class="pgroup"><h3>${m==="mañana"?"En la mañana":"En la noche"}</h3>${bs.map(b=>`<button type="button" class="pbtn" data-b="${b.id}" aria-pressed="false"><span>${esc(b.nombre)}<span class="pdesc">${esc(b.desc)}</span></span><span class="ok" id="ok-${b.id}"></span></button>`).join("")}</div>`).join("");
+  $("picker").innerHTML=`<div class="card today" style="grid-column:1/-1">
+      <div class="today-head"><h3 id="todayLabel">Hoy</h3><span><b id="todayCount">0 de ${BITACORAS.length}</b> <span class="hint">bitácoras completas</span></span></div>
+      <div class="progress" role="progressbar" aria-labelledby="todayLabel" aria-valuemin="0" aria-valuemax="${BITACORAS.length}" id="todayBar"><i></i></div>
+    </div>`+Object.entries(grupos).map(([m,bs])=>`<div class="pgroup"><h3>${m==="mañana"?"En la mañana":"En la noche"}</h3>${bs.map(b=>`<button type="button" class="pbtn" data-b="${b.id}" aria-pressed="false" id="pb-${b.id}"><span class="chk" aria-hidden="true">✓</span><span><span class="pname">${esc(b.nombre)}</span><span class="pdesc">${esc(b.desc)}</span></span><span class="ok" id="ok-${b.id}"></span></button>`).join("")}</div>`).join("");
   $("forms").innerHTML=BITACORAS.map(b=>`
     <form class="card" id="form-${b.id}" data-b="${b.id}" autocomplete="off" hidden>
       <div class="formhead">
-        <div><h3>Bitácora ${b.id==="suenos"?"":(b.nombre==="Día"?"del día":"del sueño")} · ${b.momento}</h3><h2>${esc(b.nombre==="Día"?"Mi día":b.nombre==="Sueño"?"Mi sueño":b.nombre)}</h2></div>
+        <div><h3>Bitácora ${b.id==="suenos"?"":(b.nombre==="Día"?"del día":"del sueño")} · ${b.momento}</h3><h2>${esc(b.nombre==="Día"?"Mi día":b.nombre==="Sueño"?"Mi sueño":b.nombre)}</h2><span class="qcount" id="${b.id}-qc"></span></div>
         <div class="field"><label for="${b.id}-fecha">Fecha</label><input type="date" id="${b.id}-fecha" required></div>
       </div>
       ${b.id==="sueno_manana"?`<div class="preview" id="preview" aria-live="polite"></div>`:""}
@@ -362,6 +379,8 @@ function buildForms(){
   BITACORAS.forEach(b=>{
     const form=$("form-"+b.id);
     form.addEventListener("submit",ev=>{ev.preventDefault(); submit(b);});
+    form.addEventListener("input",()=>markAnswered(b));
+    form.addEventListener("change",()=>markAnswered(b));
     $(b.id+"-fecha").addEventListener("change",()=>loadDate(b));
     $(b.id+"-del").addEventListener("click",()=>askDelete(b));
     // "N/A" deja las demás opciones sin marcar, y al revés
@@ -411,6 +430,21 @@ function fillB(b,e){
   $(b.id+"-save").textContent = exists?"Actualizar":"Guardar";
   $(b.id+"-del").hidden=!exists;
   if(b.id==="sueno_manana"){ manualTotal.v = exists && e.total!=null; autoTotal(); updatePreview(); }
+  markAnswered(b);
+}
+/* Marca con ✓ las preguntas que ya respondiste */
+function answered(v){
+  if(v==null) return false;
+  if(Array.isArray(v)) return v.some(x=>String(x).trim()!=="");
+  return String(v).trim()!=="";
+}
+function markAnswered(b){
+  const e=readB(b); let n=0;
+  b.campos.forEach((f,i)=>{
+    const el=$(`${b.id}-${f.k}-n`); const ok=answered(e[f.k]); if(ok) n++;
+    if(el){ el.textContent= ok?"✓":(i+1)+"."; el.classList.toggle("done",ok); }
+  });
+  $(b.id+"-qc").textContent=`${n} de ${b.campos.length} preguntas respondidas`;
 }
 function loadDate(b){ fillB(b, entries[b.id][$(b.id+"-fecha").value]); }
 
@@ -452,7 +486,19 @@ function openB(id){
 }
 function refreshPickerMarks(){
   const today=ymd(new Date());
-  BITACORAS.forEach(b=>{ $("ok-"+b.id).textContent = entries[b.id][today]?"✓ hoy":""; });
+  let done=0;
+  BITACORAS.forEach(b=>{
+    const e=entries[b.id][today], ok=!!e; if(ok) done++;
+    const btn=$("pb-"+b.id); btn.classList.toggle("done",ok);
+    let partial="";
+    if(ok){ const n=b.campos.filter(f=>answered(e[f.k])).length; partial = n<b.campos.length ? `${n}/${b.campos.length}` : ""; }
+    $("ok-"+b.id).textContent = partial;
+    btn.setAttribute("aria-label", `${b.nombre} ${b.momento}: ${ok?"completa hoy":"pendiente"}`);
+  });
+  $("todayCount").textContent=`${done} de ${BITACORAS.length}`;
+  $("todayBar").setAttribute("aria-valuenow",done);
+  $("todayBar").firstElementChild.style.width=(done/BITACORAS.length*100)+"%";
+  $("todayLabel").textContent = done===BITACORAS.length ? "Hoy · ¡completaste todo!" : "Hoy";
 }
 
 /* ---------- guardar ---------- */
