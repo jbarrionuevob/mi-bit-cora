@@ -202,12 +202,16 @@ details ul{padding-left:20px}
       <div class="hlist" id="hlist"></div>
     </div>
     <div class="card">
-      <h3>Copia de seguridad</h3>
+      <h3>Copia de seguridad y limpieza</h3>
       <p class="sub" style="margin:0">Tus bitácoras viven solo en este dispositivo. Haz una copia de vez en cuando y guárdala en Archivos o iCloud; con ella también puedes pasar tus datos al celular.</p>
       <div class="actions">
         <button type="button" class="btn primary" id="exportBtn">Descargar copia</button>
         <label class="btn" for="importFile" style="display:inline-flex;align-items:center">Recuperar desde una copia</label>
         <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn danger" id="wipeBtn">Borrar todo el historial</button>
+        <span id="wipeConfirm" hidden class="actions"><span class="hint" style="font-size:14px;color:var(--warn)">Esto borra todas tus bitácoras de este dispositivo.</span><button type="button" class="btn danger" id="wipeYes">Sí, borrar todo</button><button type="button" class="btn" id="wipeNo">Cancelar</button></span>
       </div>
       <span class="toast" id="backupMsg" aria-live="polite" style="color:var(--good)"></span>
     </div>
@@ -585,7 +589,7 @@ const FACTORES=[
 function renderSummary(){
   const [y,m]=curMonth.split("-").map(Number);
   $("monthTitle").textContent=MESES[m-1]+" "+y;
-  const useSample=Object.keys(entries.sueno_manana).length===0;
+  const useSample=false; // sin datos de ejemplo: solo se muestra lo que tú escribes
   $("sampleBanner").hidden=!useSample;
   const SM=useSample?SAMPLE.sueno_manana:entries.sueno_manana;
   const SN=useSample?SAMPLE.sueno_noche:entries.sueno_noche;
@@ -594,7 +598,7 @@ function renderSummary(){
   const rows=Object.values(SM).filter(e=>e.fecha&&e.fecha.startsWith(curMonth)).sort((a,b)=>a.fecha.localeCompare(b.fecha))
     .map(e=>({e, p:puntaje(e), n:SN[addDays(e.fecha,-1)]})).filter(r=>r.p);
   const out=$("summary");
-  if(!rows.length){ out.innerHTML=`<div class="card"><p class="empty">No hay bitácoras del sueño de la mañana completas en este mes. El puntaje necesita las horas, cómo te dormiste y cómo te sentiste al despertar.</p></div>`+monthMemories(); return; }
+  if(!rows.length){ out.innerHTML=`<div class="card"><p class="empty">Aquí verás tu puntaje de sueño y el análisis del mes cuando llenes tu primera bitácora del sueño de la mañana (horas, cómo te dormiste y cómo te sentiste al despertar).</p></div>`+monthMemories(); return; }
 
   const scores=rows.map(r=>r.p.total), avg=mean(scores), cat=categoria(avg);
   const mins=rows.map(r=>r.p.minutos);
@@ -747,6 +751,16 @@ BITACORAS.forEach(b=>loadDate(b)); renderAll();
 if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 // Permite que la app abra sin internet
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* ---------- borrar todo ---------- */
+$("wipeBtn").addEventListener("click",()=>{ $("wipeConfirm").hidden=false; $("wipeBtn").hidden=true; });
+$("wipeNo").addEventListener("click",()=>{ $("wipeConfirm").hidden=true; $("wipeBtn").hidden=false; });
+$("wipeYes").addEventListener("click",()=>{
+  BITACORAS.forEach(b=>entries[b.id]={}); lsSave();
+  BITACORAS.forEach(b=>{ $(b.id+"-fecha").value=ymd(new Date()); fillB(b,{}); });
+  renderAll(); $("wipeConfirm").hidden=true; $("wipeBtn").hidden=false;
+  $("backupMsg").textContent="Historial borrado. Empiezas de cero.";
+});
 
 /* ---------- copia de seguridad ---------- */
 $("exportBtn").addEventListener("click",()=>{

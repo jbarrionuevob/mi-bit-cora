@@ -1,6 +1,6 @@
 // Guarda los archivos de la app para que abra sin internet.
 // Cuando cambies index.html, sube este número (v1 → v2) para que el iPad tome la versión nueva.
-const CACHE = "mi-bitacora-v2";
+const CACHE = "mi-bitacora-v3";
 const ARCHIVOS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
