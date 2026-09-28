@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi bitácora</title>
+<meta name="theme-color" content="#34568B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi bitácora">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* =========================================================
+   COLORES Y LETRAS — cambia aquí la apariencia de toda la app
+   ========================================================= */
+:root{
+  --bg:#F4F3F8; --surface:#FFFFFF; --ink:#1D1B33; --muted:#625F7A; --line:#DEDBEA;
+  --accent:#34568B; --accent-ink:#FFFFFF; --accent-soft:#E3E9F4;
+  --lamp:#B87A12; --lamp-soft:#F7ECD6; --good:#2F7D5B; --warn:#B4552D;
+  --band:rgba(52,86,139,.08);
+  --display:"Newsreader", Georgia, "Times New Roman", serif;
+  --body:"Atkinson Hyperlegible", -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#12111F; --surface:#1B1A2E; --ink:#ECEAF6; --muted:#A09DB8; --line:#2E2C47;
+    --accent:#8FB0E6; --accent-ink:#10132A; --accent-soft:#22304A;
+    --lamp:#E6B45A; --lamp-soft:#3A2F1C; --good:#6FC79C; --warn:#E88C62;
+    --band:rgba(143,176,230,.10);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12111F; --surface:#1B1A2E; --ink:#ECEAF6; --muted:#A09DB8; --line:#2E2C47;
+  --accent:#8FB0E6; --accent-ink:#10132A; --accent-soft:#22304A;
+  --lamp:#E6B45A; --lamp-soft:#3A2F1C; --good:#6FC79C; --warn:#E88C62;
+  --band:rgba(143,176,230,.10);
+}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font:600 clamp(28px,5vw,38px)/1.1 var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font:600 22px/1.2 var(--display);margin:0;text-wrap:balance}
+h3{font:700 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+.status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--good)}
+nav.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+nav.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:700 15px var(--body);padding:10px 6px;border-radius:9px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label.chip:focus-within,summary:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px}
+
+/* selector de bitácoras */
+.picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.pgroup{display:flex;flex-direction:column;gap:8px}
+.pbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:700 15px var(--body);cursor:pointer;min-height:52px}
+.pbtn .pdesc{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.pbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pbtn .ok{font-size:12px;color:var(--good);white-space:nowrap}
+
+.formhead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field>label,.field .lbl{font-size:15px;font-weight:700}
+.hint{font-size:12px;color:var(--muted);font-weight:400}
+.num{display:inline-block;min-width:1.6em;color:var(--lamp);font-variant-numeric:tabular-nums}
+input[type=date],input[type=time],input[type=number],input[type=text],textarea{width:100%;font:16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-variant-numeric:tabular-nums;min-height:46px}
+input[type=date]{max-width:220px}
+textarea{min-height:84px;resize:vertical;line-height:1.5}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.dur{display:flex;gap:8px;align-items:center;max-width:260px}
+.dur input{flex:1}
+.list3{display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+label.chip{position:relative;display:inline-flex}
+label.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+label.chip span{padding:9px 14px;border:1px solid var(--line);border-radius:999px;font-size:14px;background:var(--bg)}
+label.chip input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:700 15px var(--body);border-radius:10px;padding:12px 18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--warn);border-color:var(--warn);background:transparent}
+.kbd{font-size:12px;color:var(--muted)}
+.toast{font-size:14px;font-weight:700}
+.preview{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:12px 14px;background:var(--accent-soft);border-radius:10px;font-size:14px}
+.preview b{font:600 22px var(--display);font-variant-numeric:tabular-nums}
+.banner{background:var(--lamp-soft);border:1px solid var(--lamp);border-radius:12px;padding:12px 14px;font-size:14px}
+
+/* resumen */
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.monthbar h2{text-transform:capitalize}
+.icon-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.ring{width:128px;height:128px}
+.ring text{font-family:var(--display)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat .v{font:600 24px/1.15 var(--display);font-variant-numeric:tabular-nums}
+.stat .d{font-size:12px;color:var(--muted)}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid currentColor}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:520px;height:auto}
+.chart text{fill:var(--muted);font:11px var(--body)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.bars{display:flex;flex-direction:column;gap:12px}
+.brow{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,160px) 64px;gap:10px;align-items:center;font-size:14px}
+.meter{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.right{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.up{color:var(--good)} .down{color:var(--warn)}
+.ftable{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.ftable th{font-size:12px;color:var(--muted);text-align:right;font-weight:700;padding:6px 4px;border-bottom:1px solid var(--line)}
+.ftable th:first-child,.ftable td:first-child{text-align:left}
+.ftable td{padding:9px 4px;border-bottom:1px solid var(--line);text-align:right}
+.insights{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.memories{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.memories li{border-left:3px solid var(--lamp);padding-left:10px;font-size:14px}
+.memories .hint{display:block}
+details{font-size:14px}
+details summary{cursor:pointer;font-weight:700}
+details ul{padding-left:20px}
+.empty{color:var(--muted);font-size:14px}
+
+/* historial */
+.hlist{display:flex;flex-direction:column}
+.hday{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center;padding:12px 2px;border-top:1px solid var(--line)}
+.hday:first-child{border-top:0}
+.hday .when{font-weight:700;font-variant-numeric:tabular-nums}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font:700 12px var(--body);padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.badge.on{background:var(--accent-soft);border-color:var(--accent)}
+.badge.off{color:var(--muted);border-style:dashed}
+@media (max-width:520px){ .hero{grid-template-columns:1fr;justify-items:start} .brow{grid-template-columns:minmax(0,1fr) 80px 54px} .hday{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:no-preference){ .btn,.pbtn,nav.tabs button{transition:background .15s} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Mi bitácora</h1>
+      <p class="sub">Escribe la que toque según el momento del día.</p>
+    </div>
+    <div class="status"><span class="dot" id="syncDot"></span><span id="syncText">Cargando…</span></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="escribir">Escribir</button>
+    <button role="tab" aria-selected="false" data-tab="resumen">Mi sueño</button>
+    <button role="tab" aria-selected="false" data-tab="historial">Historial</button>
+  </nav>
+
+  <section class="panel" id="panel-escribir">
+    <div class="picker" id="picker"></div>
+    <div id="forms"></div>
+  </section>
+
+  <section class="panel" id="panel-resumen" hidden>
+    <div class="banner" id="sampleBanner" hidden>Estás viendo <b>datos de ejemplo</b> para que veas cómo se arma el análisis. Desaparecen cuando guardes tu primera bitácora del sueño de la mañana.</div>
+    <div class="monthbar">
+      <button class="icon-btn" id="prevM" aria-label="Mes anterior">‹</button>
+      <h2 id="monthTitle"></h2>
+      <button class="icon-btn" id="nextM" aria-label="Mes siguiente">›</button>
+    </div>
+    <div id="summary" class="panel"></div>
+  </section>
+
+  <section class="panel" id="panel-historial" hidden>
+    <div class="card">
+      <h3>Tus días</h3>
+      <p class="sub" style="margin:0">Toca una bitácora para abrirla y editarla. Las punteadas están sin escribir.</p>
+      <div class="hlist" id="hlist"></div>
+    </div>
+    <div class="card">
+      <h3>Copia de seguridad</h3>
+      <p class="sub" style="margin:0">Tus bitácoras viven solo en este dispositivo. Haz una copia de vez en cuando y guárdala en Archivos o iCloud; con ella también puedes pasar tus datos al celular.</p>
+      <div class="actions">
+        <button type="button" class="btn primary" id="exportBtn">Descargar copia</button>
+        <label class="btn" for="importFile" style="display:inline-flex;align-items:center">Recuperar desde una copia</label>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <span class="toast" id="backupMsg" aria-live="polite" style="color:var(--good)"></span>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+/* =========================================================
+   TUS BITÁCORAS — para agregar, quitar o cambiar preguntas,
+   edita esta lista. Tipos de pregunta:
+     text      → texto largo        line   → una línea
+     list3     → tres líneas        time   → hora
+     number    → número             duration → horas y minutos
+     radio     → elegir una opción  checks → elegir varias
+   Cambiar la "k" de una pregunta ya usada hace que se pierdan
+   sus respuestas anteriores; cambia solo la "l" (el texto).
+   ========================================================= */
+const BITACORAS = [
+  { id:"dia_manana", nombre:"Día", momento:"mañana", desc:"Intención para hoy", campos:[
+    {k:"amaneci",  t:"text", l:"Hoy amanecí…"},
+    {k:"quiero",   t:"text", l:"Hoy quiero hacer…"},
+    {k:"buen_dia", t:"text", l:"¿Qué es lo único que haría que hoy fuera un buen día?"}
+  ]},
+  { id:"sueno_manana", nombre:"Sueño", momento:"mañana", desc:"Cómo dormí anoche · da el puntaje", campos:[
+    {k:"acoste",        t:"time",     l:"Anoche me fui a la cama a las"},
+    {k:"desperte",      t:"time",     l:"Esta mañana me he despertado a las"},
+    {k:"conciliacion",  t:"radio",    l:"Anoche me dormí", o:["Fácilmente","Al cabo de un rato","Con dificultad"]},
+    {k:"desp_veces",    t:"number",   l:"Durante la noche me he despertado (número de veces)"},
+    {k:"desp_min",      t:"number",   l:"…y estuve despierta (minutos en total)"},
+    {k:"total",         t:"duration", l:"Anoche dormí un total de", h:"Se calcula solo con tus horas; puedes corregirlo"},
+    {k:"interrupciones",t:"line",     l:"Mi sueño se vio interrumpido por"},
+    {k:"sensacion",     t:"radio",    l:"Cuando me he despertado esta mañana me he sentido", o:["Descansada","Algo descansada","Fatigada"]},
+    {k:"notas",         t:"text",     l:"Notas"}
+  ]},
+  { id:"suenos", nombre:"Diario de sueños", momento:"mañana", desc:"Lo que soñé", campos:[
+    {k:"quien",      t:"text", l:"¿Quién era yo en el sueño?"},
+    {k:"otros",      t:"text", l:"¿Quién más estaba en el sueño?"},
+    {k:"donde",      t:"text", l:"¿Dónde me encontraba? ¿Qué aspecto tenía? ¿Qué estaba haciendo?"},
+    {k:"interaccion",t:"text", l:"¿Cómo interactuaba con mi entorno y con los demás?"},
+    {k:"simbolos",   t:"text", l:"¿Qué símbolos vi? Objetos, animales, colores, formas y texturas"},
+    {k:"pensaba",    t:"text", l:"¿En qué pensaba? ¿Cómo me sentía?"},
+    {k:"titulo",     t:"line", l:"¿Qué título le pondría a este sueño?"}
+  ]},
+  { id:"dia_noche", nombre:"Día", momento:"noche", desc:"Cierre y gratitud", campos:[
+    {k:"agradezco",  t:"text",  l:"Hoy agradezco por"},
+    {k:"aprendi",    t:"text",  l:"Hoy aprendí"},
+    {k:"recordar",   t:"text",  l:"Momentos que quiero recordar"},
+    {k:"desafio",    t:"text",  l:"Desafío del día"},
+    {k:"logro",      t:"text",  l:"Pequeño logro del día"},
+    {k:"libre",      t:"text",  l:"Espacio para escribir"},
+    {k:"vueltas",    t:"text",  l:"¿Qué me está dando vueltas en la cabeza?"},
+    {k:"presente",   t:"text",  l:"¿En qué momento me sentí más presente?"},
+    {k:"feliz",      t:"list3", l:"3 cosas que me hicieron feliz"},
+    {k:"tranquila",  t:"text",  l:"¿Qué me hizo sentir tranquila hoy?"}
+  ]},
+  { id:"sueno_noche", nombre:"Sueño", momento:"noche", desc:"Mis hábitos de hoy", campos:[
+    {k:"cafeina",     t:"checks", l:"He consumido bebidas con cafeína por la", o:["Mañana","Tarde","Noche","N/A"]},
+    {k:"ejercicio",   t:"checks", l:"He hecho ejercicio al menos 20 minutos por la", o:["Mañana","Tarde","Noche","N/A"]},
+    {k:"medicamentos",t:"line",   l:"Medicamentos que he tomado hoy"},
+    {k:"somnolencia", t:"radio",  l:"Durante el día, ¿estuve a punto de quedarme dormida haciendo mis cosas?", o:["Sí","No"]},
+    {k:"humor",       t:"radio",  l:"A lo largo del día mi humor ha sido", o:["Muy bueno","Bueno","Malo","Muy malo"]},
+    {k:"antes",       t:"checks", l:"Unas 2–3 horas antes de dormir he consumido", o:["Alcohol","Comida pesada","Cafeína","N/A"]},
+    {k:"rutina",      t:"checks", l:"En la hora antes de acostarme, mi rutina incluye", o:["Leer","Meditar o respirar","Ducha caliente","Escribir","Estiramientos","Música tranquila","Celular o pantallas"]},
+    {k:"rutina_otra", t:"line",   l:"Algo más de mi rutina"}
+  ]}
+];
+
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS=["dom","lun","mar","mié","jue","vie","sáb"];
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const addDays=(f,n)=>{ const d=new Date(f+"T12:00"); d.setDate(d.getDate()+n); return ymd(d); };
+const toMin=t=>{ if(!t) return null; const [h,m]=t.split(":").map(Number); return h*60+m; };
+const fmtMin=m=>{ m=((Math.round(m)%1440)+1440)%1440; return pad(Math.floor(m/60))+":"+pad(m%60); };
+const fmtDur=m=>{ if(m==null||isNaN(m)) return "–"; m=Math.round(m); return Math.floor(m/60)+" h "+pad(m%60); };
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mean=a=>a.length? a.reduce((s,x)=>s+x,0)/a.length : null;
+const sd=a=>{ if(a.length<2) return null; const m=mean(a); return Math.sqrt(mean(a.map(x=>(x-m)**2))); };
+const offset=m=>((m-1080)%1440+1440)%1440; // minutos desde las 18:00, para promediar horas de noche
+const B=Object.fromEntries(BITACORAS.map(b=>[b.id,b]));
+
+/* =========================================================
+   PUNTAJE DE SUEÑO (0 a 100) — cambia los pesos aquí
+   ========================================================= */
+const PESOS={duracion:35, conciliacion:15, continuidad:20, sensacion:30};
+function minutosDormidos(e){
+  if(e.total!=null && e.total!=="") return +e.total;
+  const a=toMin(e.acoste), b=toMin(e.desperte); if(a==null||b==null) return null;
+  let cama=b-a; if(cama<=0) cama+=1440;
+  const lat={"Fácilmente":10,"Al cabo de un rato":30,"Con dificultad":60}[e.conciliacion]||0;
+  return Math.max(0,cama-lat-(+e.desp_min||0));
+}
+function puntaje(e){
+  if(!e) return null;
+  const tot=minutosDormidos(e);
+  if(tot==null||!e.conciliacion||!e.sensacion) return null;
+  const h=tot/60;
+  // Duración: 7–9 h da el máximo; cada hora por debajo o por encima resta 40 %
+  let dur = h>=7&&h<=9 ? 1 : h<7 ? Math.max(0,1-(7-h)*.4) : Math.max(0,1-(h-9)*.4);
+  const conc={"Fácilmente":1,"Al cabo de un rato":.5,"Con dificultad":0}[e.conciliacion];
+  const min=+e.desp_min||0, veces=+e.desp_veces||0;
+  let cont = min<=10?1 : min<=20?.75 : min<=40?.45 : min<=60?.2 : 0;
+  cont=Math.max(0,cont-Math.max(0,veces-2)*.1);
+  const sens={"Descansada":1,"Algo descansada":.5,"Fatigada":0}[e.sensacion];
+  const parts={duracion:dur*PESOS.duracion, conciliacion:conc*PESOS.conciliacion, continuidad:cont*PESOS.continuidad, sensacion:sens*PESOS.sensacion};
+  const total=Math.round(Object.values(parts).reduce((s,x)=>s+x,0));
+  return {total, parts, minutos:tot};
+}
+function categoria(p){
+  if(p>=85) return {n:"Excelente", c:"var(--good)"};
+  if(p>=70) return {n:"Bueno", c:"var(--accent)"};
+  if(p>=50) return {n:"Regular", c:"var(--lamp)"};
+  return {n:"Malo", c:"var(--warn)"};
+}
+
+/* ---------- estado ---------- */
+const entries=Object.fromEntries(BITACORAS.map(b=>[b.id,{}]));
+let storeMode="none", db=null;
+let current = new Date().getHours()<14 ? "sueno_manana" : "dia_noche";
+let curMonth=null;
+const manualTotal={v:false};
+
+/* ---------- construir formularios ---------- */
+function fieldHTML(b,f,i){
+  const id=`${b.id}-${f.k}`;
+  const n=`<span class="num">${i+1}.</span> `;
+  const hint=f.h?` <span class="hint">${esc(f.h)}</span>`:"";
+  switch(f.t){
+    case "text":  return `<div class="field"><label for="${id}">${n}${esc(f.l)}${hint}</label><textarea id="${id}"></textarea></div>`;
+    case "line":  return `<div class="field"><label for="${id}">${n}${esc(f.l)}${hint}</label><input type="text" id="${id}"></div>`;
+    case "time":  return `<div class="field"><label for="${id}">${n}${esc(f.l)}${hint}</label><input type="time" id="${id}" style="max-width:220px"></div>`;
+    case "number":return `<div class="field"><label for="${id}">${n}${esc(f.l)}${hint}</label><input type="number" min="0" inputmode="numeric" id="${id}" style="max-width:220px"></div>`;
+    case "duration": return `<div class="field"><label for="${id}-h">${n}${esc(f.l)}${hint}</label><div class="dur"><input type="number" min="0" max="24" inputmode="numeric" id="${id}-h" aria-label="horas"><span>h</span><input type="number" min="0" max="59" inputmode="numeric" id="${id}-m" aria-label="minutos"><span>min</span></div><span class="hint" id="${id}-calc" style="font-size:13px"></span></div>`;
+    case "list3": return `<div class="field"><span class="lbl">${n}${esc(f.l)}</span><div class="list3">${[0,1,2].map(j=>`<input type="text" id="${id}-${j}" aria-label="${esc(f.l)} ${j+1}" placeholder="${j+1}.">`).join("")}</div></div>`;
+    case "radio":
+    case "checks": {
+      const type=f.t==="radio"?"radio":"checkbox";
+      return `<div class="field" role="${f.t==="radio"?"radiogroup":"group"}" aria-labelledby="${id}-l"><span class="lbl" id="${id}-l">${n}${esc(f.l)}</span><div class="chips">${f.o.map((o,j)=>`<label class="chip"><input type="${type}" name="${id}" id="${id}-${j}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}</div></div>`;
+    }
+  }
+  return "";
+}
+function buildForms(){
+  const grupos={mañana:[],noche:[]};
+  BITACORAS.forEach(b=>grupos[b.momento].push(b));
+  $("picker").innerHTML=Object.entries(grupos).map(([m,bs])=>`<div class="pgroup"><h3>${m==="mañana"?"En la mañana":"En la noche"}</h3>${bs.map(b=>`<button type="button" class="pbtn" data-b="${b.id}" aria-pressed="false"><span>${esc(b.nombre)}<span class="pdesc">${esc(b.desc)}</span></span><span class="ok" id="ok-${b.id}"></span></button>`).join("")}</div>`).join("");
+  $("forms").innerHTML=BITACORAS.map(b=>`
+    <form class="card" id="form-${b.id}" data-b="${b.id}" autocomplete="off" hidden>
+      <div class="formhead">
+        <div><h3>Bitácora ${b.id==="suenos"?"":(b.nombre==="Día"?"del día":"del sueño")} · ${b.momento}</h3><h2>${esc(b.nombre==="Día"?"Mi día":b.nombre==="Sueño"?"Mi sueño":b.nombre)}</h2></div>
+        <div class="field"><label for="${b.id}-fecha">Fecha</label><input type="date" id="${b.id}-fecha" required></div>
+      </div>
+      ${b.id==="sueno_manana"?`<div class="preview" id="preview" aria-live="polite"></div>`:""}
+      ${b.campos.map((f,i)=>fieldHTML(b,f,i)).join("")}
+      <div class="actions">
+        <button type="submit" class="btn primary" id="${b.id}-save">Guardar</button>
+        <button type="button" class="btn danger" id="${b.id}-del" hidden>Borrar este día</button>
+        <span class="kbd">⌘ + Enter también guarda</span>
+        <span class="toast" id="${b.id}-toast" aria-live="polite"></span>
+      </div>
+    </form>`).join("");
+
+  document.querySelectorAll(".pbtn").forEach(p=>p.addEventListener("click",()=>openB(p.dataset.b)));
+  BITACORAS.forEach(b=>{
+    const form=$("form-"+b.id);
+    form.addEventListener("submit",ev=>{ev.preventDefault(); submit(b);});
+    $(b.id+"-fecha").addEventListener("change",()=>loadDate(b));
+    $(b.id+"-del").addEventListener("click",()=>askDelete(b));
+    // "N/A" deja las demás opciones sin marcar, y al revés
+    form.addEventListener("change",ev=>{
+      const t=ev.target; if(t.type!=="checkbox"||!t.checked) return;
+      const group=form.querySelectorAll(`input[name="${t.name}"]`);
+      if(t.value==="N/A") group.forEach(x=>{ if(x!==t) x.checked=false; });
+      else group.forEach(x=>{ if(x.value==="N/A") x.checked=false; });
+    });
+  });
+  const sm=$("form-sueno_manana");
+  sm.addEventListener("input",ev=>{
+    if(ev.target.id.startsWith("sueno_manana-total")) manualTotal.v = $("sueno_manana-total-h").value!=="" || $("sueno_manana-total-m").value!=="";
+    autoTotal(); updatePreview();
+  });
+  sm.addEventListener("change",()=>{ autoTotal(); updatePreview(); });
+}
+
+function readB(b){
+  const o={fecha:$(b.id+"-fecha").value};
+  b.campos.forEach(f=>{
+    const id=`${b.id}-${f.k}`;
+    switch(f.t){
+      case "number": o[f.k]=$(id).value===""?null:Math.max(0,Math.round(+$(id).value)); break;
+      case "duration": { const h=$(id+"-h").value, m=$(id+"-m").value; o[f.k]=(h===""&&m==="")?null:(+h||0)*60+(+m||0); break; }
+      case "list3": o[f.k]=[0,1,2].map(j=>$(id+"-"+j).value.trim()); break;
+      case "radio": { const c=document.querySelector(`input[name="${id}"]:checked`); o[f.k]=c?c.value:null; break; }
+      case "checks": o[f.k]=[...document.querySelectorAll(`input[name="${id}"]:checked`)].map(x=>x.value); break;
+      default: o[f.k]=$(id).value.trim();
+    }
+  });
+  return o;
+}
+function fillB(b,e){
+  e=e||{};
+  b.campos.forEach(f=>{
+    const id=`${b.id}-${f.k}`, v=e[f.k];
+    switch(f.t){
+      case "duration": $(id+"-h").value = v==null?"":Math.floor(v/60); $(id+"-m").value = v==null?"":v%60; break;
+      case "list3": [0,1,2].forEach(j=>$(id+"-"+j).value=(v||[])[j]||""); break;
+      case "radio": case "checks":
+        document.querySelectorAll(`input[name="${id}"]`).forEach(x=>x.checked = f.t==="radio" ? x.value===v : (v||[]).includes(x.value)); break;
+      default: $(id).value = v==null?"":v;
+    }
+  });
+  const exists=!!entries[b.id][$(b.id+"-fecha").value];
+  $(b.id+"-save").textContent = exists?"Actualizar":"Guardar";
+  $(b.id+"-del").hidden=!exists;
+  if(b.id==="sueno_manana"){ manualTotal.v = exists && e.total!=null; autoTotal(); updatePreview(); }
+}
+function loadDate(b){ fillB(b, entries[b.id][$(b.id+"-fecha").value]); }
+
+function autoTotal(){
+  if(manualTotal.v) return;
+  const e=readB(B.sueno_manana); e.total=null;
+  const m=minutosDormidos(e);
+  $("sueno_manana-total-h").value = m==null?"":Math.floor(m/60);
+  $("sueno_manana-total-m").value = m==null?"":m%60;
+}
+function updatePreview(){
+  const cur=readB(B.sueno_manana);
+  const calcEl=$("sueno_manana-total-calc");
+  if(calcEl){
+    const a=toMin(cur.acoste), b2=toMin(cur.desperte);
+    if(a==null||b2==null){ calcEl.textContent="Pon la hora en que te acostaste y te despertaste y se calcula solo."; }
+    else{
+      let cama=b2-a; if(cama<=0) cama+=1440;
+      const lat={"Fácilmente":10,"Al cabo de un rato":30,"Con dificultad":60}[cur.conciliacion];
+      const dm=+cur.desp_min||0;
+      let t=`Cálculo: ${fmtDur(cama)} en cama (de ${cur.acoste} a ${cur.desperte})`;
+      t+= lat!=null ? ` − ${lat} min que tardaste en dormirte (aprox., según "${cur.conciliacion.toLowerCase()}")` : ` − lo que tardaste en dormirte (elige en la pregunta 3)`;
+      t+=` − ${dm} min despierta en la noche = ${fmtDur(Math.max(0,cama-(lat||0)-dm))}.`;
+      if(manualTotal.v) t+=" Tú lo corregiste a mano; borra las casillas para volver al cálculo automático.";
+      calcEl.textContent=t;
+    }
+  }
+  const p=puntaje(cur);
+  const el=$("preview"); if(!el) return;
+  if(!p){ el.innerHTML=`<span>Completa horas, cómo te dormiste y cómo te sentiste para ver tu puntaje de sueño.</span>`; return; }
+  const c=categoria(p.total);
+  el.innerHTML=`<span>Puntaje de anoche</span><b style="color:${c.c}">${p.total}</b><span class="pill" style="color:${c.c}">${c.n}</span><span class="hint">${fmtDur(p.minutos)} dormidas</span>`;
+}
+
+function openB(id){
+  current=id;
+  document.querySelectorAll(".pbtn").forEach(p=>p.setAttribute("aria-pressed",p.dataset.b===id));
+  BITACORAS.forEach(b=>$("form-"+b.id).hidden=b.id!==id);
+}
+function refreshPickerMarks(){
+  const today=ymd(new Date());
+  BITACORAS.forEach(b=>{ $("ok-"+b.id).textContent = entries[b.id][today]?"✓ hoy":""; });
+}
+
+/* ---------- guardar ---------- */
+function flash(b,msg,err){ const t=$(b.id+"-toast"); t.textContent=msg; t.style.color=err?"var(--warn)":"var(--good)"; clearTimeout(t._t); t._t=setTimeout(()=>t.textContent="",4000); }
+function lsLoad(){ try{ const all=JSON.parse(localStorage.getItem("bitacoras")||"{}"); BITACORAS.forEach(b=>entries[b.id]=all[b.id]||{}); }catch(e){} }
+function lsSave(){ try{ localStorage.setItem("bitacoras",JSON.stringify(entries)); }catch(e){} }
+
+async function submit(b){
+  const e=readB(b);
+  if(!e.fecha){ flash(b,"Elige la fecha.",true); return; }
+  e.actualizado=new Date().toISOString();
+  const btn=$(b.id+"-save"); btn.disabled=true;
+  try{
+    entries[b.id][e.fecha]=e; lsSave(); renderAll();
+    btn.textContent="Actualizar"; $(b.id+"-del").hidden=false;
+    flash(b,"Guardado ✓"); refreshPickerMarks();
+  }catch(err){
+    flash(b, err&&err.code==="quota_exceeded"?"Se llenó el espacio de guardado.":"No se pudo guardar en este dispositivo. Revisa que Safari no esté en modo privado.", true);
+  }finally{ btn.disabled=false; }
+}
+function askDelete(b){
+  const del=$(b.id+"-del");
+  if(del.dataset.confirm!=="1"){ del.dataset.confirm="1"; del.textContent="Toca otra vez para borrar"; setTimeout(()=>{ del.dataset.confirm=""; del.textContent="Borrar este día"; },4000); return; }
+  del.dataset.confirm=""; del.textContent="Borrar este día";
+  const f=$(b.id+"-fecha").value;
+  (async()=>{
+    try{
+      delete entries[b.id][f]; lsSave();
+      fillB(b,{}); flash(b,"Borrado"); renderAll();
+    }catch(e){ flash(b,"No se pudo borrar.",true); }
+  })();
+}
+document.addEventListener("keydown",ev=>{
+  if((ev.metaKey||ev.ctrlKey)&&ev.key==="Enter"&&!$("panel-escribir").hidden){ ev.preventDefault(); $("form-"+current).requestSubmit(); }
+});
+
+/* ---------- pestañas ---------- */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x.dataset.tab===name));
+  ["escribir","resumen","historial"].forEach(n=>$("panel-"+n).hidden=n!==name);
+}
+document.querySelectorAll("nav.tabs button").forEach(x=>x.addEventListener("click",()=>showTab(x.dataset.tab)));
+
+/* ---------- datos de ejemplo (nunca se guardan) ---------- */
+function sample(){
+  const sm={}, sn={}; const now=new Date(); const y=now.getFullYear(), mo=now.getMonth();
+  let seed=11; const r=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
+  const last=Math.max(3,Math.min(now.getDate(),28));
+  for(let d=1; d<=last; d++){
+    const f=y+"-"+pad(mo+1)+"-"+pad(d), prev=addDays(f,-1);
+    const caf=r()<.35, pant=r()<.5, ej=r()<.45, alc=r()<.12;
+    sn[prev]={fecha:prev, cafeina:caf?["Mañana","Tarde"]:["Mañana"], ejercicio:ej?["Tarde"]:["N/A"],
+      antes:alc?["Alcohol"]:["N/A"], rutina:[pant?"Celular o pantallas":"Leer", r()<.5?"Meditar o respirar":"Ducha caliente"],
+      humor:["Muy bueno","Bueno","Bueno","Malo"][Math.floor(r()*4)], somnolencia:r()<.2?"Sí":"No"};
+    if(r()<.1) continue;
+    const bad=caf+pant+alc-ej*.5;
+    const bed=1380+Math.round((r()-.4)*80+bad*20), wake=380+Math.round((r()-.5)*50);
+    sm[f]={fecha:f, acoste:fmtMin(bed), desperte:fmtMin(wake),
+      conciliacion:bad>=1.5?"Con dificultad":bad>=.5||r()<.3?"Al cabo de un rato":"Fácilmente",
+      desp_veces:Math.round(r()*2+bad*.6), desp_min:Math.round(r()*15+bad*10), total:null,
+      sensacion:bad>=1.5?"Fatigada":bad>=.5||r()<.25?"Algo descansada":"Descansada"};
+  }
+  return {sueno_manana:sm, sueno_noche:sn};
+}
+const SAMPLE=sample();
+
+/* ---------- análisis mensual ---------- */
+function monthKey(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1); }
+$("prevM").addEventListener("click",()=>{ const [y,m]=curMonth.split("-").map(Number); curMonth=monthKey(new Date(y,m-2,1)); renderSummary(); });
+$("nextM").addEventListener("click",()=>{ const [y,m]=curMonth.split("-").map(Number); curMonth=monthKey(new Date(y,m,1)); renderSummary(); });
+
+const FACTORES=[
+  ["Cafeína en la tarde o la noche", n=>(n.cafeina||[]).some(x=>x==="Tarde"||x==="Noche")],
+  ["Cafeína 2–3 h antes de dormir",  n=>(n.antes||[]).includes("Cafeína")],
+  ["Alcohol antes de dormir",        n=>(n.antes||[]).includes("Alcohol")],
+  ["Comida pesada antes de dormir",  n=>(n.antes||[]).includes("Comida pesada")],
+  ["Ejercicio de 20 min o más",      n=>(n.ejercicio||[]).some(x=>x!=="N/A")],
+  ["Ejercicio en la noche",          n=>(n.ejercicio||[]).includes("Noche")],
+  ["Pantallas en la última hora",    n=>(n.rutina||[]).includes("Celular o pantallas")],
+  ["Rutina relajante (leer, meditar, ducha, estirar…)", n=>(n.rutina||[]).some(x=>x!=="Celular o pantallas")],
+  ["Humor bueno o muy bueno",        n=>n.humor==="Bueno"||n.humor==="Muy bueno"]
+];
+
+function renderSummary(){
+  const [y,m]=curMonth.split("-").map(Number);
+  $("monthTitle").textContent=MESES[m-1]+" "+y;
+  const useSample=Object.keys(entries.sueno_manana).length===0;
+  $("sampleBanner").hidden=!useSample;
+  const SM=useSample?SAMPLE.sueno_manana:entries.sueno_manana;
+  const SN=useSample?SAMPLE.sueno_noche:entries.sueno_noche;
+  const days=new Date(y,m,0).getDate();
+
+  const rows=Object.values(SM).filter(e=>e.fecha&&e.fecha.startsWith(curMonth)).sort((a,b)=>a.fecha.localeCompare(b.fecha))
+    .map(e=>({e, p:puntaje(e), n:SN[addDays(e.fecha,-1)]})).filter(r=>r.p);
+  const out=$("summary");
+  if(!rows.length){ out.innerHTML=`<div class="card"><p class="empty">No hay bitácoras del sueño de la mañana completas en este mes. El puntaje necesita las horas, cómo te dormiste y cómo te sentiste al despertar.</p></div>`+monthMemories(); return; }
+
+  const scores=rows.map(r=>r.p.total), avg=mean(scores), cat=categoria(avg);
+  const mins=rows.map(r=>r.p.minutos);
+  const bedOff=rows.map(r=>toMin(r.e.acoste)).filter(x=>x!=null).map(offset);
+  const wakeOff=rows.map(r=>toMin(r.e.desperte)).filter(x=>x!=null).map(offset);
+  const best=rows.reduce((a,b)=>b.p.total>a.p.total?b:a), worst=rows.reduce((a,b)=>b.p.total<a.p.total?b:a);
+  const somn=Object.values(SN).filter(n=>n.fecha&&n.fecha.startsWith(curMonth)&&n.somnolencia==="Sí").length;
+  const counts={Excelente:0,Bueno:0,Regular:0,Malo:0}; scores.forEach(s=>counts[categoria(s).n]++);
+  const fd=f=>{ const d=new Date(f+"T12:00"); return DIAS[d.getDay()]+" "+d.getDate(); };
+
+  // anillo
+  const R=54, C=2*Math.PI*R, frac=Math.max(0,Math.min(1,avg/100));
+  const ring=`<svg class="ring" viewBox="0 0 128 128" role="img" aria-label="Puntaje promedio ${Math.round(avg)} de 100">
+    <circle cx="64" cy="64" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>
+    <circle cx="64" cy="64" r="${R}" fill="none" stroke="${cat.c}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C*frac} ${C}" transform="rotate(-90 64 64)"/>
+    <text x="64" y="68" text-anchor="middle" font-size="34" font-weight="600" fill="var(--ink)">${Math.round(avg)}</text>
+    <text x="64" y="88" text-anchor="middle" font-size="11" fill="var(--muted)" style="font-family:var(--body)">de 100</text></svg>`;
+
+  // componentes
+  const comp=Object.keys(PESOS).map(k=>{ const v=mean(rows.map(r=>r.p.parts[k])); return {k, v, pct:v/PESOS[k]}; });
+  const nombresComp={duracion:"Duración (7–9 h ideal)",conciliacion:"Facilidad para dormirme",continuidad:"Sueño sin interrupciones",sensacion:"Descanso al despertar"};
+  const weakest=comp.reduce((a,b)=>b.pct<a.pct?b:a);
+
+  // factores
+  const facts=FACTORES.map(([label,fn])=>{
+    const withN=rows.filter(r=>r.n&&fn(r.n)), without=rows.filter(r=>r.n&&!fn(r.n));
+    const a=mean(withN.map(r=>r.p.total)), b=mean(without.map(r=>r.p.total));
+    const ok=withN.length>=3&&without.length>=3;
+    return {label, nw:withN.length, nwo:without.length, a, b, d: ok? a-b : null};
+  });
+  const strong=facts.filter(f=>f.d!=null&&Math.abs(f.d)>=5).sort((x,z)=>Math.abs(z.d)-Math.abs(x.d));
+
+  // conclusiones en palabras
+  const ins=[];
+  ins.push(`Tu sueño de este mes fue <b>${cat.n.toLowerCase()}</b>, con ${Math.round(avg)} puntos en promedio.`);
+  ins.push(`Donde más puntos pierdes es en <b>${nombresComp[weakest.k].toLowerCase()}</b> (${Math.round(weakest.pct*100)} % del máximo).`);
+  const sdb=sd(bedOff); if(sdb!=null) ins.push(sdb<=30?`Te acostaste a una hora bastante constante (± ${Math.round(sdb)} min).`:`Tu hora de acostarte varió bastante (± ${Math.round(sdb)} min); un horario más fijo suele mejorar el descanso.`);
+  strong.slice(0,3).forEach(f=>ins.push(`Las noches con <b>${f.label.toLowerCase()}</b> tuviste ${f.d>0?"mejor":"peor"} sueño: ${Math.round(f.a)} frente a ${Math.round(f.b)} puntos.`));
+  if(somn) ins.push(`${somn} día${somn>1?"s":""} estuviste a punto de quedarte dormida durante el día.`);
+  if(!strong.length) ins.push(`Aún no hay suficientes noches para saber qué hábitos te afectan. Se necesitan al menos 3 noches con y 3 sin cada hábito, llenando también la bitácora del sueño de la noche.`);
+
+  out.innerHTML=`
+  <div class="card">
+    <div class="hero">${ring}
+      <div class="panel" style="gap:10px">
+        <div><h3>Puntaje de sueño del mes</h3><h2 style="color:${cat.c}">${cat.n}</h2></div>
+        <div class="cats">${Object.entries(counts).map(([k,v])=>`<span class="pill" style="color:${categoria({Excelente:90,Bueno:75,Regular:60,Malo:0}[k]).c}">${k}: ${v}</span>`).join("")}</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><h3>Noches</h3><span class="v">${rows.length}</span><span class="d">de ${days} del mes</span></div>
+      <div class="stat"><h3>Dormí en promedio</h3><span class="v">${fmtDur(mean(mins))}</span><span class="d">${mins.filter(x=>x<360).length} noches con menos de 6 h</span></div>
+      <div class="stat"><h3>Me acosté</h3><span class="v">${bedOff.length?fmtMin(mean(bedOff)+1080):"–"}</span><span class="d">hora promedio</span></div>
+      <div class="stat"><h3>Me desperté</h3><span class="v">${wakeOff.length?fmtMin(mean(wakeOff)+1080):"–"}</span><span class="d">hora promedio</span></div>
+      <div class="stat"><h3>Mejor noche</h3><span class="v">${best.p.total}</span><span class="d">${fd(best.e.fecha)}</span></div>
+      <div class="stat"><h3>Noche más difícil</h3><span class="v">${worst.p.total}</span><span class="d">${fd(worst.e.fecha)}</span></div>
+    </div>
+  </div>
+
+  <div class="card"><h3>Qué dice el análisis</h3><ul class="insights">${ins.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+
+  <div class="card"><h3>Puntaje noche por noche</h3><div class="chart">${scoreChart(rows,days)}</div>
+    <div class="legend"><span><i style="background:var(--good)"></i>Excelente 85+</span><span><i style="background:var(--accent)"></i>Bueno 70–84</span><span><i style="background:var(--lamp)"></i>Regular 50–69</span><span><i style="background:var(--warn)"></i>Malo &lt;50</span></div></div>
+
+  <div class="card"><h3>De dónde salen tus puntos</h3><div class="bars">
+    ${comp.map(c=>`<div class="brow"><span>${nombresComp[c.k]}</span><span class="meter"><i style="width:${Math.round(c.pct*100)}%"></i></span><span class="right">${c.v.toFixed(0)} / ${PESOS[c.k]}</span></div>`).join("")}
+  </div></div>
+
+  <div class="card"><h3>Qué hábitos acompañan tus mejores noches</h3>
+    <p class="sub" style="margin:0">Compara el puntaje de la mañana según lo que anotaste la noche anterior. Es una tendencia de tus datos, no una prueba de causa.</p>
+    <div class="chart"><table class="ftable" style="min-width:420px"><thead><tr><th>Hábito la noche anterior</th><th>Con</th><th>Sin</th><th>Diferencia</th></tr></thead><tbody>
+    ${facts.map(f=>`<tr><td>${esc(f.label)}</td><td>${f.nw?Math.round(f.a)+` <span class="hint">(${f.nw})</span>`:"–"}</td><td>${f.nwo?Math.round(f.b)+` <span class="hint">(${f.nwo})</span>`:"–"}</td><td class="${f.d==null?"":f.d>=5?"up":f.d<=-5?"down":""}" style="font-weight:700">${f.d==null?"faltan datos":(f.d>0?"+":"")+Math.round(f.d)}</td></tr>`).join("")}
+    </tbody></table></div>
+  </div>
+
+  <details class="card"><summary>Cómo se calcula el puntaje</summary>
+    <p>Sale de la bitácora del sueño de la mañana y suma 100 puntos:</p>
+    <ul>
+      <li><b>Duración, ${PESOS.duracion} pts:</b> completo entre 7 y 9 horas; cada hora de menos o de más resta el 40 %.</li>
+      <li><b>Facilidad para dormirme, ${PESOS.conciliacion} pts:</b> fácilmente = todo, al cabo de un rato = la mitad, con dificultad = 0.</li>
+      <li><b>Sueño sin interrupciones, ${PESOS.continuidad} pts:</b> según los minutos despierta (hasta 10 min = completo) y se resta un poco por cada despertar después del segundo.</li>
+      <li><b>Descanso al despertar, ${PESOS.sensacion} pts:</b> descansada = todo, algo descansada = la mitad, fatigada = 0.</li>
+    </ul>
+    <p>Categorías: 85 o más excelente, 70 a 84 bueno, 50 a 69 regular, menos de 50 malo.</p>
+  </details>
+  ${monthMemories()}`;
+}
+
+function scoreChart(rows,days){
+  const W=640,H=220,L=30,R=8,T=10,Bm=26;
+  const iw=W-L-R, ih=H-T-Bm, bw=iw/days, Y=v=>T+ih-(v/100)*ih;
+  const by={}; rows.forEach(r=>by[+r.e.fecha.slice(8)]=r);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Puntaje de sueño por noche">`;
+  s+=`<rect x="${L}" y="${Y(100)}" width="${iw}" height="${Y(70)-Y(100)}" fill="var(--band)"/>`;
+  [0,50,70,85,100].forEach(v=>{ s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`; });
+  for(let d=1; d<=days; d++){
+    const x=L+(d-1)*bw, r=by[d];
+    if(r){ const v=r.p.total; s+=`<rect x="${x+bw*.18}" y="${Y(v)}" width="${bw*.64}" height="${Y(0)-Y(v)}" rx="2" fill="${categoria(v).c}"><title>${d}: ${v} puntos</title></rect>`; }
+    else s+=`<circle cx="${x+bw/2}" cy="${Y(0)-3}" r="1.5" fill="var(--line)"/>`;
+    if(d===1||d%5===0) s+=`<text x="${x+bw/2}" y="${H-8}" text-anchor="middle">${d}</text>`;
+  }
+  return s+"</svg>";
+}
+
+function monthMemories(){
+  const inMonth=o=>Object.values(o).filter(e=>e.fecha&&e.fecha.startsWith(curMonth)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const items=[];
+  inMonth(entries.dia_noche).forEach(e=>{ if(e.recordar) items.push([e.fecha,"Momento para recordar",e.recordar]); });
+  inMonth(entries.suenos).forEach(e=>{ if(e.titulo) items.push([e.fecha,"Sueño",e.titulo]); });
+  items.sort((a,b)=>b[0].localeCompare(a[0]));
+  const happy=inMonth(entries.dia_noche).flatMap(e=>(e.feliz||[]).filter(Boolean)).length;
+  if(!items.length&&!happy) return "";
+  return `<div class="card"><h3>Lo que guardaste este mes</h3>
+    ${happy?`<p class="sub" style="margin:0">Anotaste <b>${happy}</b> cosas que te hicieron feliz.</p>`:""}
+    <ul class="memories">${items.slice(0,10).map(([f,t,v])=>{ const d=new Date(f+"T12:00"); return `<li><span class="hint">${DIAS[d.getDay()]} ${d.getDate()} · ${t}</span>${esc(v.length>160?v.slice(0,160)+"…":v)}</li>`; }).join("")}</ul></div>`;
+}
+
+/* ---------- historial ---------- */
+function renderHistory(){
+  const dates=new Set(); BITACORAS.forEach(b=>Object.keys(entries[b.id]).forEach(f=>dates.add(f)));
+  const list=[...dates].sort().reverse();
+  if(!list.length){ $("hlist").innerHTML=`<p class="empty">Todavía no has guardado ninguna bitácora.</p>`; return; }
+  $("hlist").innerHTML=list.map(f=>{
+    const d=new Date(f+"T12:00"); const p=puntaje(entries.sueno_manana[f]);
+    return `<div class="hday"><span class="when">${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()].slice(0,3)}${p?`<br><span class="pill" style="color:${categoria(p.total).c}">sueño ${p.total}</span>`:""}</span>
+      <div class="badges">${BITACORAS.map(b=>`<button type="button" class="badge ${entries[b.id][f]?"on":"off"}" data-b="${b.id}" data-f="${f}">${esc(b.nombre)} · ${b.momento}</button>`).join("")}</div></div>`;
+  }).join("");
+}
+$("hlist").addEventListener("click",ev=>{
+  const x=ev.target.closest(".badge"); if(!x) return;
+  const b=B[x.dataset.b]; $(b.id+"-fecha").value=x.dataset.f; loadDate(b); openB(b.id); showTab("escribir"); window.scrollTo({top:0});
+});
+
+function renderAll(){ renderSummary(); renderHistory(); refreshPickerMarks(); }
+
+/* ---------- arranque ---------- */
+buildForms();
+const today=ymd(new Date());
+BITACORAS.forEach(b=>{ $(b.id+"-fecha").value=today; fillB(b,{}); });
+openB(current);
+curMonth=monthKey(new Date());
+renderAll();
+
+/* ---------- guardado en este dispositivo ---------- */
+storeMode="local"; lsLoad();
+$("syncDot").classList.add("ok");
+$("syncText").textContent="Guardado en este dispositivo";
+BITACORAS.forEach(b=>loadDate(b)); renderAll();
+// Pide al navegador que no borre los datos por falta de espacio
+if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+// Permite que la app abra sin internet
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* ---------- copia de seguridad ---------- */
+$("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify({app:"mi-bitacora",version:1,fecha:new Date().toISOString(),datos:entries},null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="mi-bitacora-"+ymd(new Date())+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  $("backupMsg").textContent="Copia creada. Guárdala en Archivos o en iCloud.";
+});
+$("importFile").addEventListener("change",async ev=>{
+  const file=ev.target.files[0]; if(!file) return;
+  try{
+    const obj=JSON.parse(await file.text());
+    const datos=obj.datos||obj; let n=0;
+    BITACORAS.forEach(b=>{ Object.entries(datos[b.id]||{}).forEach(([f,e])=>{ if(e&&e.fecha){ entries[b.id][f]=e; n++; } }); });
+    lsSave(); BITACORAS.forEach(b=>loadDate(b)); renderAll();
+    $("backupMsg").textContent=`Listo: se recuperaron ${n} entradas.`;
+  }catch(e){ $("backupMsg").textContent="Ese archivo no es una copia de Mi bitácora. Elige el archivo .json que exportaste."; }
+  ev.target.value="";
+});
+})();
+</script>
+</body>
+</html>
